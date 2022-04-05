@@ -13,9 +13,14 @@
                 success: function (data) {
                     let newPost = newPostDom(data.data.post);
                     $('#posts-list-container>ul').prepend(newPost);
-
                     // delete post
                     deletePost($(' .delete-post-button',newPost));
+
+                    // call the create comment class
+                    new PostComments(data.data.post._id);
+
+                    // enable the toggle like functionality to new post
+                    new ToggleLike($(' .toggle-like-button',newPost));
                 },
                 error: function(error){
                     console.log(error.responseText);
@@ -36,9 +41,15 @@
                 <small>
                     ${post.user.name}
                 </small>
+                <br>
+                <small>
+                    <a class="toggle-like-button" data-likes="0" href="/likes/toggle/?id=<${post._id}&type=Post">
+                        0 Likes
+                    </a>
+                </small>
             </p>
             <div class="post-comments">                
-                <form action="/comments/create" method="post">
+                <form id="post-comment-${post._id}" action="/comments/create" method="post">
                     <input type="text" name="content"  placeholder="Type Here to add comment..." required>
                     <input type="hidden" name="post" value="${post._id}">
                     <input type="submit" value="Add Comment">
@@ -57,7 +68,7 @@
     let deletePost = function(deleteLink){ // deleteLink refer to entire <a> tag in post deletion
         $(deleteLink).click(function (e) { 
             e.preventDefault();
-            console.log('deleteLink',deleteLink);
+            
             $.ajax({
                 type: 'get',
                 url: $(deleteLink).prop('href'),

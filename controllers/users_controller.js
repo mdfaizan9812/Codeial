@@ -1,4 +1,6 @@
-const User = require('../models/user');
+const User = require('../models/user.js');
+const fs = require('fs');
+const path = require('path');
 
 
 module.exports.profile = async function(req, res){
@@ -17,19 +19,36 @@ module.exports.profile = async function(req, res){
 }
 
 module.exports.update = async function(req,res){
-    try {
-        if(req.user.id == req.params.id){
+    if(req.user.id == req.params.id){
+        try {
+            let user = await User.findById(req.params.id);
 
-            let user = await User.findByIdAndUpdate(req.params.id,req.body);
-            
-            return res.redirect('back');
-            
-        }else{
-            return res.status(401).send('Unauthorized');
+            User.uploadedAvatar(req,res,function(err){
+                if(err){console.log('***Multer error : ',err);}
+                
+                // updating user name and email
+                user.name = req.body.name;
+                user.email = req.body.email;
+
+                // as we know uploading file is not required so check it
+                if(req.file){
+                    // if file exist in uploads folder then delete that and add new one
+                    if(fs.existsSync(path.join(__dirname,'..',user.avatar))){
+                        fs.unlinkSync(path.join(__dirname,'..',user.avatar));
+                    }
+                    // saving the path of uploaded file into the avatar field in this user
+                    user.avatar = User.avatarPath + '/' + req.file.filename;
+                }
+                user.save();
+                return res.redirect('back');
+            });
+        }catch (err) {
+            console.log("Error in homeController in update function", err);
+            return; 
         }
-    } catch (err) {
-        console.log("Error in homeController in update function", err);
-        return; 
+        
+    }else{
+        return res.status(401).send('Unauthorized');
     }
     
 }

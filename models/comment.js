@@ -16,7 +16,13 @@ const commentSchema = new mongoose.Schema(
             // linking to user model
             type:mongoose.Schema.Types.ObjectId,
             ref:'Post'  // user collection name
-        }
+        },
+        likes:[
+            {
+                type:mongoose.Schema.Types.ObjectId,
+                ref:'Like'
+            }
+        ]
     },
 {
     timestamps:true
